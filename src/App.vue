@@ -1,13 +1,16 @@
 <script setup>
 // import HelloWorld from './components/HelloWorld.vue'
 // import Map from './components/Map.vue'
-import ChargingStrategyScheduler from './components/ChargingStrategyScheduler/Scheduler.vue'
+// import ChargingStrategyScheduler from './components/ChargingStrategyScheduler/Scheduler.vue'
+// import Topo from './components/topo.vue'
+import Topo from './components/le5le.vue';
 </script>
 
 <template>
   <div>
     <!-- <Map /> -->
-     <ChargingStrategyScheduler />
+     <!-- <ChargingStrategyScheduler /> -->
+      <Topo />
   </div>
 </template>
 
