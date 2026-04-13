@@ -10,6 +10,10 @@ const notificationTabRef = ref<InstanceType<typeof NotificationConfigTab> | null
 function handleCreateRule() {
   notificationTabRef.value?.openCreateModal();
 }
+
+function handleDeleteRule() {
+  notificationTabRef.value?.requestDeleteSelectedRules();
+}
 </script>
 
 <template>
@@ -23,7 +27,7 @@ function handleCreateRule() {
         <template #rightExtra>
           <div v-if="activeKey === 'message'" class="tab-actions">
             <a-button type="primary" size="small" @click="handleCreateRule">+ 新增</a-button>
-            <a-button size="small">删除</a-button>
+            <a-button size="small" @click="handleDeleteRule">删除</a-button>
             <a-button size="small">添加通知人</a-button>
           </div>
         </template>

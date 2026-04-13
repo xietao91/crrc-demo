@@ -84,6 +84,7 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
 
 const selectedRuleIds = ref<string[]>([]);
 const createModalRef = ref<InstanceType<typeof NotificationCreateModal> | null>(null);
+const deleteConfirmVisible = ref(false);
 
 const allSelected = computed({
   get: () => ruleConfigs.value.length > 0 && selectedRuleIds.value.length === ruleConfigs.value.length,
@@ -109,6 +110,35 @@ function toggleRule(id: string, checked: boolean) {
 
 function openCreateModal() {
   createModalRef.value?.open();
+}
+
+function requestDeleteSelectedRules() {
+  if (selectedRuleIds.value.length === 0) {
+    message.warning('请先选择要删除的配置项');
+    return;
+  }
+
+  const selectedRules = ruleConfigs.value.filter((item) => selectedRuleIds.value.includes(item.id));
+  const hasEnabledRule = selectedRules.some((item) => item.enabled);
+
+  if (hasEnabledRule) {
+    message.warning('选择的配置存在打开的，不能删除');
+    return;
+  }
+
+  deleteConfirmVisible.value = true;
+}
+
+function handleDeleteConfirm() {
+  const selectedIdSet = new Set(selectedRuleIds.value);
+  ruleConfigs.value = ruleConfigs.value.filter((item) => !selectedIdSet.has(item.id));
+  selectedRuleIds.value = [];
+  deleteConfirmVisible.value = false;
+  message.success('删除成功');
+}
+
+function handleDeleteCancel() {
+  deleteConfirmVisible.value = false;
 }
 
 function getConditionText(form: CreateRulePayload): string {
@@ -138,6 +168,7 @@ function handleCreateSave(form: CreateRulePayload) {
 
 defineExpose({
   openCreateModal,
+  requestDeleteSelectedRules,
 });
 </script>
 
@@ -224,6 +255,17 @@ defineExpose({
       :existing-names="ruleConfigs.map((item) => item.name)"
       @save="handleCreateSave"
     />
+
+    <a-modal
+      v-model:visible="deleteConfirmVisible"
+      title="删除配置"
+      ok-text="确认"
+      cancel-text="取消"
+      @ok="handleDeleteConfirm"
+      @cancel="handleDeleteCancel"
+    >
+      <p class="delete-confirm-text">确认删除所选告警配置项？</p>
+    </a-modal>
   </section>
 </template>
 
@@ -340,6 +382,11 @@ defineExpose({
   padding-top: 8px;
   border-top: 1px solid #e5e7eb;
   color: #595959;
+}
+
+.delete-confirm-text {
+  margin: 20px 0;
+  text-align: center;
 }
 
 @media (max-width: 1200px) {
