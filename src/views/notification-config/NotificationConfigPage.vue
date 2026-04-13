@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { BellOutlined, SettingOutlined } from '@ant-design/icons-vue';
 
 import ParkTreePanel from './components/ParkTreePanel.vue';
 import NotificationConfigTab from './components/NotificationConfigTab.vue';
@@ -32,11 +33,23 @@ function handleDeleteRule() {
           </div>
         </template>
 
-        <a-tab-pane key="message" tab="消息通知配置">
+        <a-tab-pane key="message">
+          <template #tab>
+            <span class="tab-label">
+              <BellOutlined style="margin-right: 6px ;" />
+              <span>消息通知配置</span>
+            </span>
+          </template>
           <NotificationConfigTab ref="notificationTabRef" />
         </a-tab-pane>
 
-        <a-tab-pane key="other" tab="其它配置">
+        <a-tab-pane key="other">
+          <template #tab>
+            <span class="tab-label">
+              <SettingOutlined />
+              <span>其它配置</span>
+            </span>
+          </template>
           <a-empty description="其它配置功能开发中" />
         </a-tab-pane>
       </a-tabs>
@@ -69,5 +82,11 @@ function handleDeleteRule() {
 .tab-actions {
   display: flex;
   gap: 8px;
+}
+
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 </style>

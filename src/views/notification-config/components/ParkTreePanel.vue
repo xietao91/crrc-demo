@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import type { TreeProps } from 'ant-design-vue';
+import { SearchOutlined } from '@ant-design/icons-vue';
 
 interface ParkTreeNode {
   title: string;
@@ -221,7 +222,7 @@ function onExpand(keys: string[]) {
     <div class="tree-search">
       <a-input v-model:value="searchKeyword" placeholder="请输入关键词">
         <template #suffix>
-          <span class="search-icon">🔍</span>
+          <SearchOutlined class="search-icon" />
         </template>
       </a-input>
     </div>
