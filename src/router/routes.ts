@@ -3,6 +3,7 @@ import type { RouteRecordRaw } from 'vue-router';
 import ExportDemoPage from '../views/demo/ExportDemoPage.vue';
 import ExportProgressCenter from '../views/export-center/ExportProgressCenter.vue';
 import Scheduler from '../views/ChargingStrategyScheduler/Scheduler.vue';
+import NotificationConfigPage from '../views/notification-config/NotificationConfigPage.vue';
 
 export const appRoutes: RouteRecordRaw[] = [
   {
@@ -33,6 +34,15 @@ export const appRoutes: RouteRecordRaw[] = [
     component: Scheduler,
     meta: {
       title: '充放电策略调度',
+      showInMenu: true,
+    },
+  },
+  {
+    path: '/notification-config',
+    name: 'notification-config',
+    component: NotificationConfigPage,
+    meta: {
+      title: '通知配置',
       showInMenu: true,
     },
   },
