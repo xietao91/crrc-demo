@@ -4,9 +4,12 @@ import { message } from 'ant-design-vue';
 import NotificationCreateModal from './NotificationCreateModal.vue';
 import type { CreateRulePayload } from './NotificationCreateModal.vue';
 
-type ConditionOperator = '大于' | '大于或等于' | '小于' | '小于或等于' | '等于';
-type NotifyFrequency = '6小时1次' | '12小时1次' | 'custom';
-type ChannelLabel = '云平台' | '储能云APP' | '桩所APP' | '短信';
+type ConditionOperator = CreateRulePayload['conditionOperator'];
+type ConditionUnit = CreateRulePayload['conditionUnit'];
+type DurationUnit = CreateRulePayload['durationUnit'];
+type NotifyFrequency = CreateRulePayload['frequency'];
+type ChannelLabel = CreateRulePayload['channels'][number]['label'];
+type RuleConditionType = 'threshold' | 'offline';
 
 interface NotifyChannelConfig {
   label: ChannelLabel;
@@ -17,9 +20,14 @@ interface NotifyRuleConfig {
   id: string;
   name: string;
   enabled: boolean;
+  conditionType: RuleConditionType;
   conditionLabel: string;
-  conditionOperator: ConditionOperator;
-  conditionValue: string;
+  conditionOperator?: ConditionOperator;
+  conditionThreshold: string;
+  conditionUnit?: ConditionUnit;
+  durationValue: string;
+  durationUnit: DurationUnit;
+  conditionSuffixText?: string;
   frequency: NotifyFrequency;
   customFrequencyHours: string;
   channels: NotifyChannelConfig[];
@@ -33,9 +41,14 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
     id: 'rule-1',
     name: '单体电压异常',
     enabled: true,
+    conditionType: 'threshold',
     conditionLabel: '单体电压',
     conditionOperator: '小于或等于',
-    conditionValue: '2.7 V，持续 1 分钟',
+    conditionThreshold: '2.7',
+    conditionUnit: 'V',
+    durationValue: '1',
+    durationUnit: '分钟',
+    conditionSuffixText: '则告警',
     frequency: '6小时1次',
     customFrequencyHours: '',
     channels: [
@@ -50,9 +63,14 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
     id: 'rule-2',
     name: '单体温度异常',
     enabled: true,
+    conditionType: 'threshold',
     conditionLabel: '单体温度',
     conditionOperator: '大于或等于',
-    conditionValue: '45 C，持续 3 秒',
+    conditionThreshold: '45',
+    conditionUnit: '℃',
+    durationValue: '3',
+    durationUnit: '秒',
+    conditionSuffixText: '则告警',
     frequency: '6小时1次',
     customFrequencyHours: '',
     channels: [
@@ -67,9 +85,12 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
     id: 'rule-3',
     name: '设备掉线',
     enabled: true,
+    conditionType: 'offline',
     conditionLabel: '检测心跳（bms/pcs/冷机/消防/ems/电表等）',
-    conditionOperator: '等于',
-    conditionValue: '20 分钟无数据传输',
+    conditionThreshold: '',
+    durationValue: '20',
+    durationUnit: '分钟',
+    conditionSuffixText: '时停止数据传输，则告警',
     frequency: '6小时1次',
     customFrequencyHours: '',
     channels: [
@@ -141,18 +162,19 @@ function handleDeleteCancel() {
   deleteConfirmVisible.value = false;
 }
 
-function getConditionText(form: CreateRulePayload): string {
-  return `${form.conditionThreshold} ${form.conditionUnit}，持续 ${form.durationValue} ${form.durationUnit}`;
-}
-
 function handleCreateSave(form: CreateRulePayload) {
   const newRule: NotifyRuleConfig = {
     id: `rule-${Date.now()}`,
     name: form.name,
     enabled: form.pushEnabled,
+    conditionType: 'threshold',
     conditionLabel: form.conditionLabel,
     conditionOperator: form.conditionOperator as ConditionOperator,
-    conditionValue: getConditionText(form),
+    conditionThreshold: form.conditionThreshold,
+    conditionUnit: form.conditionUnit,
+    durationValue: form.durationValue,
+    durationUnit: form.durationUnit,
+    conditionSuffixText: '则告警',
     frequency: form.frequency,
     customFrequencyHours: form.frequency === 'custom' ? form.customFrequencyHours : '',
     channels: form.channels.map((channel) => ({
@@ -199,13 +221,27 @@ defineExpose({
           <div class="rule-row first-row">
             <div class="rule-condition">
               <span class="label">触发条件</span>
-              <span>{{ rule.conditionLabel }}</span>
-              <a-select v-model:value="rule.conditionOperator" size="small" style="width: 120px">
-                <a-select-option v-for="option in conditionOperatorOptions" :key="option" :value="option">
-                  {{ option }}
-                </a-select-option>
-              </a-select>
-              <a-input v-model:value="rule.conditionValue" size="small" style="width: 220px" />
+              <template v-if="rule.conditionType === 'threshold'">
+                <span class="condition-text">{{ rule.conditionLabel }}</span>
+                <a-select v-model:value="rule.conditionOperator"  class="condition-operator-select">
+                  <a-select-option v-for="option in conditionOperatorOptions" :key="option" :value="option">
+                    {{ option }}
+                  </a-select-option>
+                </a-select>
+                <a-input v-model:value="rule.conditionThreshold"  class="condition-number-input" />
+                <span class="condition-text">{{ rule.conditionUnit }}</span>
+                <span class="condition-text">，持续</span>
+                <a-input v-model:value="rule.durationValue"  class="condition-duration-input" />
+                <span class="condition-text">{{ rule.durationUnit }}</span>
+                <span class="condition-text">{{ rule.conditionSuffixText }}</span>
+              </template>
+              <template v-else>
+                <span class="condition-text">{{ rule.conditionLabel }}</span>
+                <span class="condition-text">持续</span>
+                <a-input v-model:value="rule.durationValue"  class="condition-duration-input" />
+                <span class="condition-text">{{ rule.durationUnit }}</span>
+                <span class="condition-text">{{ rule.conditionSuffixText }}</span>
+              </template>
             </div>
           </div>
 
@@ -213,7 +249,7 @@ defineExpose({
             <span class="label">告警推送渠道</span>
             <div class="channel-list">
               <div v-for="channel in rule.channels" :key="`${rule.id}-${channel.label}`" class="channel-item">
-                <a-switch v-model:checked="channel.enabled" size="small" />
+                <a-switch v-model:checked="channel.enabled"  />
                 <span class="channel-label">{{ channel.label }}</span>
               </div>
             </div>
@@ -229,7 +265,7 @@ defineExpose({
               </a-radio-group>
               <a-input
                 v-model:value="rule.customFrequencyHours"
-                size="small"
+                
                 style="width: 88px"
                 placeholder="请输入"
                 :disabled="rule.frequency !== 'custom'"
@@ -242,8 +278,8 @@ defineExpose({
           <footer class="rule-footer">
             <span>通知人（{{ rule.notifyUsers }}）</span>
             <a-space>
-              <a-button type="link" size="small">添加</a-button>
-              <a-button type="link" size="small">查看</a-button>
+              <a-button type="link" >添加</a-button>
+              <a-button type="link" >查看</a-button>
             </a-space>
           </footer>
         </div>
@@ -278,7 +314,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .toolbar-title {
@@ -288,8 +324,9 @@ defineExpose({
 
 .select-all-wrap {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: center;
+  padding-right: 16px;
 }
 
 .rule-list {
@@ -341,16 +378,36 @@ defineExpose({
 
 .first-row {
   justify-content: flex-start;
+  align-items: flex-start;
 }
 
 .rule-condition {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  row-gap: 10px;
+  min-height: 36px;
+}
+
+.condition-text {
+  color: #595959;
+  line-height: 32px;
+}
+
+.condition-operator-select {
+  width: 132px;
+}
+
+.condition-number-input,
+.condition-duration-input {
+  width: 96px;
 }
 
 .label {
+  flex: 0 0 auto;
   color: #595959;
+  min-width: 56px;
 }
 
 .channel-list {
@@ -373,6 +430,7 @@ defineExpose({
 .frequency-group {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -397,6 +455,10 @@ defineExpose({
 
   .rule-main {
     padding-right: 0;
+  }
+
+  .rule-row {
+    align-items: flex-start;
   }
 }
 </style>

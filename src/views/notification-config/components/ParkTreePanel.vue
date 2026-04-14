@@ -219,46 +219,57 @@ function onExpand(keys: string[]) {
       <a-checkbox v-model:checked="checkAll" :indeterminate="indeterminate">园区列表</a-checkbox>
     </header>
 
-    <div class="tree-search">
-      <a-input v-model:value="searchKeyword" placeholder="请输入关键词">
-        <template #suffix>
-          <SearchOutlined class="search-icon" />
-        </template>
-      </a-input>
-    </div>
+    <div class="tree-body">
+      <div class="tree-search">
+        <a-input v-model:value="searchKeyword" placeholder="请输入关键词">
+          <template #suffix>
+            <SearchOutlined class="search-icon" />
+          </template>
+        </a-input>
+      </div>
 
-    <a-tree
-      :tree-data="filteredTreeData"
-      :load-data="loadData"
-      checkable
-      :checked-keys="checkedNodeKeys"
-      :selected-keys="selectedKeys"
-      :expanded-keys="expandedKeys"
-      @check="onCheck"
-      @select="onSelect"
-      @expand="onExpand"
-    />
+      <a-tree
+        :tree-data="filteredTreeData"
+        :load-data="loadData"
+        checkable
+        :checked-keys="checkedNodeKeys"
+        :selected-keys="selectedKeys"
+        :expanded-keys="expandedKeys"
+        @check="onCheck"
+        @select="onSelect"
+        @expand="onExpand"
+      />
+    </div>
   </section>
 </template>
 
 <style scoped>
 .tree-panel {
+  display: flex;
+  flex-direction: column;
   height: 100%;
-  padding: 12px;
-  border-right: 1px solid #f0f0f0;
   background: #fff;
 }
 
 .tree-header {
   display: flex;
+  flex: 0 0 55px;
+  height: 55px;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 2px 12px;
+  padding: 0 16px;
   border-bottom: 1px solid #f0f0f0;
 }
 
+.tree-body {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+}
+
 .tree-search {
-  margin: 12px 0;
+  margin-bottom: 16px;
 }
 
 .search-icon {
