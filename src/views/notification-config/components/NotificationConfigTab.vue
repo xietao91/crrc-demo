@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { message } from 'ant-design-vue';
 import NotificationCreateModal from './NotificationCreateModal.vue';
+import NotificationUserViewModal from './NotificationUserViewModal.vue';
 import type { CreateRulePayload } from './NotificationCreateModal.vue';
 
 type ConditionOperator = CreateRulePayload['conditionOperator'];
@@ -32,6 +33,7 @@ interface NotifyRuleConfig {
   customFrequencyHours: string;
   channels: NotifyChannelConfig[];
   notifyUsers: number;
+  notifyUserList: string[];
 }
 
 const conditionOperatorOptions: ConditionOperator[] = ['大于', '大于或等于', '小于', '小于或等于', '等于'];
@@ -58,6 +60,7 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
       { label: '短信', enabled: true },
     ],
     notifyUsers: 17,
+    notifyUserList: ['管理员 53', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '管理员', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某'],
   },
   {
     id: 'rule-2',
@@ -80,6 +83,7 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
       { label: '短信', enabled: true },
     ],
     notifyUsers: 17,
+    notifyUserList: ['管理员 53', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '管理员', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某'],
   },
   {
     id: 'rule-3',
@@ -100,11 +104,13 @@ const ruleConfigs = ref<NotifyRuleConfig[]>([
       { label: '短信', enabled: true },
     ],
     notifyUsers: 17,
+    notifyUserList: ['管理员 53', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '管理员', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某', '张某某'],
   },
 ]);
 
 const selectedRuleIds = ref<string[]>([]);
 const createModalRef = ref<InstanceType<typeof NotificationCreateModal> | null>(null);
+const viewModalRef = ref<InstanceType<typeof NotificationUserViewModal> | null>(null);
 const deleteConfirmVisible = ref(false);
 
 const allSelected = computed({
@@ -162,6 +168,10 @@ function handleDeleteCancel() {
   deleteConfirmVisible.value = false;
 }
 
+function handleViewUsers(rule: NotifyRuleConfig) {
+  viewModalRef.value?.open(rule.notifyUserList);
+}
+
 function handleCreateSave(form: CreateRulePayload) {
   const newRule: NotifyRuleConfig = {
     id: `rule-${Date.now()}`,
@@ -182,6 +192,7 @@ function handleCreateSave(form: CreateRulePayload) {
       enabled: channel.enabled,
     })),
     notifyUsers: 0,
+    notifyUserList: [],
   };
 
   ruleConfigs.value.push(newRule);
@@ -279,12 +290,14 @@ defineExpose({
             <span>通知人（{{ rule.notifyUsers }}）</span>
             <a-space>
               <a-button type="link" >添加</a-button>
-              <a-button type="link" >查看</a-button>
+              <a-button type="link" @click="handleViewUsers(rule)">查看</a-button>
             </a-space>
           </footer>
         </div>
       </article>
     </div>
+
+    <NotificationUserViewModal ref="viewModalRef" />
 
     <NotificationCreateModal
       ref="createModalRef"
