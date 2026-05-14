@@ -14,6 +14,7 @@ interface ParkTreeNode {
 
 const searchKeyword = ref('');
 const selectedKeys = ref<string[]>([]);
+const selectedParentKey = ref<string | undefined>(undefined);
 const checkedNodeKeys = ref<string[]>([]);
 const expandedKeys = ref<string[]>([]);
 
@@ -125,6 +126,17 @@ const filteredTreeData = computed(() => {
     .filter(Boolean) as ParkTreeNode[];
 });
 
+const visibleNodeKeys = computed(() => {
+  const keys = new Set<string>();
+  for (const root of filteredTreeData.value) {
+    keys.add(root.key);
+    for (const child of root.children ?? []) {
+      keys.add(child.key);
+    }
+  }
+  return keys;
+});
+
 async function fetchChildren(rootNode: ParkTreeNode): Promise<ParkTreeNode[]> {
   await new Promise((resolve) => {
     setTimeout(resolve, 400);
@@ -167,11 +179,23 @@ const loadData: NonNullable<TreeProps['loadData']> = async (treeNode) => {
   await loadChildrenByRootKey(String(treeNode.key));
 };
 
+function findParentKey(nodeKey: string): string | undefined {
+  for (const root of treeData.value) {
+    if (root.children?.some((child) => child.key === nodeKey)) {
+      return root.key;
+    }
+  }
+  return undefined;
+}
+
 function onSelect(keys: string[], info: { node: ParkTreeNode }) {
   if (!info.node.isLeaf) {
     return;
   }
   selectedKeys.value = keys;
+  selectedParentKey.value = keys.length > 0 ? findParentKey(info.node.key) : undefined;
+  console.log('Selected keys:', selectedKeys.value);
+  console.log('Selected parent key:', selectedParentKey.value);
 }
 
 function normalizeCheckedKeys(keys: string[] | { checked: string[] }) {
@@ -187,9 +211,10 @@ async function onCheck(
   info?: { node: ParkTreeNode; checked?: boolean },
 ) {
   let nextKeys = normalizeCheckedKeys(keys);
+  const hidden = checkedNodeKeys.value.filter((k) => !visibleNodeKeys.value.has(k));
 
   if (!info || info.node.isLeaf) {
-    checkedNodeKeys.value = nextKeys;
+    checkedNodeKeys.value = [...new Set([...hidden, ...nextKeys])];
     return;
   }
 
@@ -205,12 +230,14 @@ async function onCheck(
     nextKeys = nextKeys.filter((key) => !childKeys.includes(key));
   }
 
-  checkedNodeKeys.value = nextKeys;
+  checkedNodeKeys.value = [...new Set([...hidden, ...nextKeys])];
 }
 
 function onExpand(keys: string[]) {
   expandedKeys.value = keys;
 }
+
+
 </script>
 
 <template>
@@ -238,7 +265,15 @@ function onExpand(keys: string[]) {
         @check="onCheck"
         @select="onSelect"
         @expand="onExpand"
-      />
+      >
+        <template #title="node">
+          <span
+            :style="
+              !node.isLeaf && node.key === selectedParentKey ? { color: '#1677ff' } : undefined
+            "
+          >{{ node.title }}</span>
+        </template>
+      </a-tree>
     </div>
   </section>
 </template>
